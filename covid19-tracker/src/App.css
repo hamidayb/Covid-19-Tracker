@@ -9,7 +9,7 @@ body {
 .root {
   display: flex;
   justify-content: space-evenly;
-  padding: 20px;
+  padding: 10px;
 }
 
 .root__stats {
@@ -18,10 +18,17 @@ body {
 }
 
 .root__left {
-  flex: 0.9;
+  flex: 0.95;
 }
-.root_right {
-  flex: 0.1;
+
+.root__right h4 {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.root__graphTitle {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 @media only screen and (max-width: 990px) {

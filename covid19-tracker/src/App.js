@@ -1,4 +1,3 @@
-import './App.css';
 import TopBar from './components/TopBar/TopBar';
 import InfoBox from './components/InfoBox/InfoBox'
 import Map from './components/Map/Map';
@@ -6,20 +5,29 @@ import Table from './components/Table/Table';
 import LineGraph from './components/LineGraph/LineGraph';
 import {useEffect, useState} from 'react';
 import {Card, CardContent} from '@material-ui/core';
-import Sort from './sort.js';
+import {Sort} from './components/Utils/util';
+import  "leaflet/dist/leaflet.css"
+import './App.css';
 
 function App() {
   const [countries, setCountries] = useState([]);    
   const [country, setCountry] = useState('worldwide');
   const [countryInfo, setCountryInfo] = useState([]);
-  const [tableData, setTableData] = useState([])
+  const [mapCountries, setMapCountries] = useState([]);
+  const [casesType, setCasesType] = useState("cases");
+  const [tableData, setTableData] = useState([]);
+  const [mapCenter, setMapCenter] = useState({lat: 34.8746, lng: -40.4796});
+  const [mapZoom, setMapZoom] = useState(3);
   
-  useEffect( async () => {
-    await fetch("https://disease.sh/v3/covid-19/all")
-      .then(response => response.json())
-      .then(data => 
-      setCountryInfo(data)
+  useEffect( () => {
+    async function fetchData () {
+      await fetch("https://disease.sh/v3/covid-19/all")
+        .then(response => response.json())
+        .then(data => 
+        setCountryInfo(data)
       );
+    }
+    fetchData();
   }, [])
 
   useEffect(() => {
@@ -34,6 +42,7 @@ function App() {
             }
             ));
             const sortedData = Sort(data);
+            setMapCountries(data);
             setTableData(sortedData);
             setCountries(countries);
         });
@@ -53,6 +62,14 @@ function App() {
     .then(data => {
       setCountry(countryCode)
       setCountryInfo(data)
+
+      if(countryCode !== "worldwide"){
+        setMapCenter([data.countryInfo.lat, data.countryInfo.long]);
+        setMapZoom(5);
+      }else{
+        setMapCenter({lat: 34.8746, lng: -40.4796});
+        setMapZoom(3);
+      }
     });
   }
 
@@ -61,18 +78,18 @@ function App() {
       <div className="root__left">
         <TopBar country={country} countries={countries} countryChange={onCountryChange}></TopBar>
         <div className="root__stats">
-          <InfoBox id="1" title="Coronavirus Cases" cases={countryInfo.todayCases} total={countryInfo.cases} />
-          <InfoBox id="2" title="Recoverd" cases={countryInfo.todayRecovered} total={countryInfo.recovered} />
-          <InfoBox id="3" title="Deaths" cases={countryInfo.todayDeaths} total={countryInfo.deaths} />
+          <InfoBox id="1" active={casesType==="cases"} isRed changeMap={() => setCasesType("cases")} title="Coronavirus Cases" cases={countryInfo.todayCases} total={countryInfo.cases} />
+          <InfoBox id="2" active={casesType==="recovered"} changeMap={() => setCasesType("recovered")} title="Recoverd" cases={countryInfo.todayRecovered} total={countryInfo.recovered} />
+          <InfoBox id="3" active={casesType==="deaths"} isRed changeMap={() => setCasesType("deaths")} title="Deaths" cases={countryInfo.todayDeaths} total={countryInfo.deaths} />
         </div>
-        <Map></Map>
+        <Map countries={mapCountries} casesType={casesType}  center={mapCenter} zoom={mapZoom} />
       </div>
       <Card className="root__right">
         <CardContent>
-          <h3>Live Cases by Country</h3>
+          <h4>Live Cases by Country</h4>
           <Table countries={tableData} />
-          <h3>Worldwide new cases</h3>
-          <LineGraph />
+          <h4 className="root__graphTitle">Worldwide new {casesType}</h4>
+          <LineGraph casesType={casesType} />
         </CardContent>
       </Card>
 
@@ -82,3 +99,4 @@ function App() {
 }
 
 export default App;
+
